@@ -1,16 +1,17 @@
+
 pipeline {
 
     agent any
 
-    tools { 
-        maven 'maven3' 
+    tools {
+        maven 'maven3'
     }
 
     options {
-        buildDiscarder logRotator( 
-                    daysToKeepStr: '15', 
-                    numToKeepStr: '10'
-            )
+        buildDiscarder logRotator(
+            daysToKeepStr: '15',
+            numToKeepStr: '10'
+        )
     }
 
     environment {
@@ -19,12 +20,12 @@ pipeline {
     }
 
     stages {
-        
+
         stage('Cleanup Workspace') {
             steps {
                 cleanWs()
                 sh """
-                echo "Cleaned Up Workspace for ${APP_NAME}"
+                    echo "Cleaned Up Workspace for ${APP_NAME}"
                 """
             }
         }
@@ -32,26 +33,47 @@ pipeline {
         stage('Code Checkout') {
             steps {
                 checkout([
-                    $class: 'GitSCM', 
-                    branches: [[name: '*/main']], 
-                    userRemoteConfigs: [[url: 'https://github.com/spring-projects/spring-petclinic.git']]
+                    $class: 'GitSCM',
+                    branches: [[name: '*/main']],
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/spring-projects/spring-petclinic.git'
+                    ]]
                 ])
             }
         }
 
         stage('Code Build') {
             steps {
-                 sh 'echo Code Build'
+                sh 'echo Code Build'
             }
         }
 
-        stage('Printing All Global Variables') {
-            steps {
-                sh """
-                env
-                """
+        // NEW: Parallel execution
+        stage('Environment Analysis') {
+            parallel {
+
+                stage('Printing All Global Variables') {
+                    steps {
+                        sh """
+                            env
+                        """
+                    }
+                }
+
+                stage('Execute Shell') {
+                    steps {
+                        sh 'echo "Hello Student. Thanks for keeping up!"'
+                    }
+                }
+
+                stage('Print ENV variable') {
+                    steps {
+                        sh 'echo ${APP_ENV}'
+                    }
+                }
+
             }
         }
 
-    }   
+    }
 }
